@@ -7,7 +7,9 @@ import numpy as np
 app = FastAPI()
 
 # Chargement du modèle entraîné
-model = joblib.load('fraud_model.pkl')
+# Avant : model = joblib.load('fraud_model.pkl')
+# Après :
+model = joblib.load('real_fraud_model.pkl')
 
 # Définition du format des données attendues (JSON)
 class TransactionRequest(BaseModel):
@@ -20,7 +22,14 @@ def home():
 
 @app.post("/predict")
 def predict_fraud(transaction: TransactionRequest):
-    # Préparation des données pour le modèle
+    # Préparation des données pour le modèle dans le cas des données simulées
+    #features = np.array([[transaction.amount, transaction.distance]])
+
+    # On map nos entrées Java vers les colonnes du Dataset Kaggle
+    # Java envoie : amount, distance
+    # Le modèle attend : Amount, V4
+    
+    # On considère que 'distance' influence la feature 'V4'
     features = np.array([[transaction.amount, transaction.distance]])
     
     # Prédiction (0 ou 1)

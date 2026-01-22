@@ -13,14 +13,19 @@ import java.time.LocalDateTime;
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
-    private final String FRAUD_API_URL = "http://127.0.0.1:8000/predict";
+
+    // On injecte l'URL depuis application.properties
+    // Si on est dans Docker, on pourra écraser cette valeur facilement !
+    @org.springframework.beans.factory.annotation.Value("${fraud.api.url}")
+    private String fraudApiUrl;
 
     public Transaction processTransaction(Double amount, Double distance) {
         RestTemplate restTemplate = new RestTemplate();
         FraudRequest request = new FraudRequest(amount, distance);
 
+        // On utilise la variable dynamique 'fraudApiUrl'
         FraudCheckResponse fraudResponse = restTemplate.postForObject(
-                FRAUD_API_URL, 
+                fraudApiUrl, 
                 request, 
                 FraudCheckResponse.class
         );

@@ -1,0 +1,28 @@
+services:
+  # Service 1 : L'Intelligence Artificielle
+  fraud-service:
+    build: ./fraud-detection-service
+    container_name: finshield-python-ai
+    ports:
+      - "8000:8000"
+    networks:
+      - finshield-network
+
+  # Service 2 : Le Core Banking (Java)
+  core-banking:
+    build: ./core-banking-service/core-banking
+    container_name: finshield-java-core
+    ports:
+      - "8081:8081"
+    environment:
+      # C'est ICI qu'on dit à Java : "Ne cherche pas localhost, cherche 'fraud-service'"
+      - FRAUD_API_URL=http://fraud-service:8000/predict
+    depends_on:
+      - fraud-service # Java attendra que Python soit prêt
+    networks:
+      - finshield-network
+
+# Création d'un réseau privé pour qu'ils puissent se parler
+networks:
+  finshield-network:
+    driver: bridge
