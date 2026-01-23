@@ -2,11 +2,25 @@
 
 ![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=java)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3-green?style=for-the-badge&logo=spring)
-![Python](https://img.shields.io/badge/Python-3.9-blue?style=for-the-badge&logo=python)
+![Spring Security](https://img.shields.io/badge/Spring_Security-6-6DB33F?style=for-the-badge&logo=springsecurity)
+![JWT](https://img.shields.io/badge/JWT-Auth-black?style=for-the-badge&logo=jsonwebtokens)
 ![React](https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react)
+![Python](https://img.shields.io/badge/Python-3.9-blue?style=for-the-badge&logo=python)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker)
 
-**FinShield AI** is a full-stack microservices application designed to detect credit card fraud in real-time. It combines a robust **Java Spring Boot** backend, a **React** dashboard, and a **Python AI** engine trained on real-world banking data.
+**FinShield AI** is a secured, full-stack microservices application designed to detect credit card fraud in real-time. It combines a **Secured Spring Boot** backend, a modern **Glassmorphism React** dashboard, and a **Python AI** engine.
+
+---
+
+## ✨ Key Features
+
+* **🔐 Secure Authentication:** Full Login/Register system using **Spring Security** and **JWT (JSON Web Tokens)**.
+* **👮 Role-Based Access Control (RBAC):**
+    * **ADMIN:** Full access to global statistics, charts, and transaction history.
+    * **USER:** Restricted access (Simulation mode only).
+* **🧠 AI-Powered Detection:** Real-time fraud probability analysis using a **Random Forest** model (Python/Scikit-Learn).
+* **🎨 Modern UI:** Sleek **Glassmorphism** design with **React Toastify** notifications and responsive charts.
+* **🐳 Fully Dockerized:** One command to run the entire stack (Database + API + Frontend + AI).
 
 ---
 
@@ -14,32 +28,34 @@
 
 The project follows a decoupled **Microservices Architecture**:
 
-1.  **Frontend (React + Vite):** A modern dashboard for bank administrators to simulate transactions and view analytics.
-2.  **Core Banking Service (Java Spring Boot):** Handles transaction processing, data persistence (H2 Database), and communicates with the AI service.
-3.  **Fraud Detection Service (Python FastAPI):** A dedicated AI service running a **Random Forest** model (Scikit-Learn) trained on the Kaggle *Credit Card Fraud Detection* dataset.
-
-### 🔄 Workflow
-1. User submits a transaction via the **React Dashboard**.
-2. **Java Backend** receives the request and forwards data to **Python AI**.
-3. **Python AI** predicts the fraud probability (0% to 100%) and returns the verdict.
-4. **Java Backend** saves the transaction with the status (`APPROVED` or `REJECTED_FRAUD`).
-5. **Frontend** updates the UI in real-time.
+1.  **Frontend (React + Vite):** A secured dashboard that manages JWT tokens and adapts the UI based on user roles.
+2.  **Core Banking Service (Spring Boot):**
+    * Handles User Registration & Login.
+    * Issues & Validates JWT Tokens.
+    * Manages Business Logic & H2 Database.
+3.  **Fraud Detection Service (Python FastAPI):** A dedicated AI microservice serving the Machine Learning model.
 
 ---
 
 ## 📸 Screenshots
 
+| Login View |
+
+| ![alt text](image-2.png) |
+
+---
+
 | Dashboard View |
 
-| ![alt text](image.png) |
+| ![alt text](image-1.png) |
 
 ---
 
 ## 🛠️ Tech Stack
 
-* **Frontend:** React, Vite, Recharts (Data Viz), Lucide-React (Icons), CSS Grid.
-* **Backend:** Java 21, Spring Boot 3 (Web, Data JPA), REST Template, H2 Database.
-* **AI/ML:** Python 3.9, FastAPI, Scikit-Learn, Pandas, Joblib.
+* **Frontend:** React, Vite, Recharts, Lucide-React, React-Toastify, CSS Modules (Glassmorphism).
+* **Backend:** Java 21, Spring Boot 3, **Spring Security 6**, **JJWT**, Spring Data JPA.
+* **AI/ML:** Python 3.9, FastAPI, Scikit-Learn, Pandas.
 * **DevOps:** Docker, Docker Compose, Nginx.
 
 ---
@@ -95,24 +111,25 @@ python train_kaggle.py
 ```
 ---
 
-## 🧪 Testing Scenarios
+## 🧪 How to Test (Demo Accounts)
+The application automatically assigns roles based on the username used during registration.
 
-Use the Dashboard simulation form to test the AI:
+1️⃣ Access the App
+Go to: http://localhost:5173
 
-✅ Scenario 1: Normal Transaction
-Amount: 50 €
+2️⃣ Scenario A: The Administrator (Full Access)
+Register with a username starting with admin (e.g., adminReda).
 
-Distance: 5 km
+Password: Any password.
 
-Result: APPROVED 🟢
+Result: You will see the Charts, KPIs, and the Global Transaction History.
 
-❌ Scenario 2: Suspicious Transaction
-Amount: 10,000 € (High value)
+3️⃣ Scenario B: The Employee (Restricted Access)
+Register with any other username (e.g., RedaUser).
 
-Distance: 100 km (Unusual location)
+Password: Any password.
 
-Result: REJECTED 🔴 (Depending on model probability)
-
+Result: You will only see the Simulation Form. The history tab will be locked 🔒.
 ---
 ## 👨‍💻 Author
 
