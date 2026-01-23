@@ -1,36 +1,58 @@
+// frontend/src/App.jsx
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { ShieldAlert, ShieldCheck, Activity, DollarSign, LayoutDashboard, List } from 'lucide-react';
+import { jwtDecode } from "jwt-decode";
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { ShieldAlert, ShieldCheck, Activity, DollarSign, LayoutDashboard, List, LogOut, Search, Lock } from 'lucide-react';
+import { ToastContainer, toast } from 'react-toastify'; // IMPORT DES NOTIFICATIONS
+import Login from './Login';
 import './App.css';
 
 function App() {
+  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [userRole, setUserRole] = useState(null);
+  const [username, setUsername] = useState('');
+
+  useEffect(() => {
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        setUserRole(decoded.role); 
+        setUsername(decoded.sub);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      } catch (e) {
+        handleLogout();
+      }
+    }
+  }, [token]);
+
+  if (!token) return <Login />;
+
   const [transactions, setTransactions] = useState([]);
   const [amount, setAmount] = useState('');
   const [distance, setDistance] = useState('');
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({ total: 0, fraud: 0, secureAmount: 0 });
-  
-  // --- NOUVEAU : État pour savoir quelle page afficher ---
   const [activeTab, setActiveTab] = useState('dashboard');
 
   const fetchTransactions = async () => {
+    if (userRole !== 'ADMIN') return;
     try {
       const response = await axios.get('http://localhost:8081/api/transactions');
       const data = response.data;
       setTransactions(data);
-      
       const total = data.length;
       const frauds = data.filter(t => t.fraud).length;
       const secure = data.filter(t => !t.fraud).reduce((acc, curr) => acc + curr.amount, 0);
-      
       setStats({ total, fraud: frauds, secureAmount: secure });
     } catch (error) {
-      console.error("Erreur backend:", error);
+      console.error("Accès refusé ou erreur serveur");
     }
   };
 
-  useEffect(() => { fetchTransactions(); }, []);
+  useEffect(() => { 
+    if(userRole === 'ADMIN') fetchTransactions(); 
+  }, [userRole]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,160 +63,183 @@ function App() {
         distance: parseFloat(distance)
       });
       setAmount(''); setDistance('');
-      fetchTransactions();
-    } catch (error) { alert("Erreur API"); } 
+      // UTILISATION DE TOAST AU LIEU DE ALERT
+      toast.success("Transaction envoyée pour analyse !");
+      if(userRole === 'ADMIN') fetchTransactions();
+    } catch (error) { 
+      // UTILISATION DE TOAST POUR L'ERREUR AUSSI
+      toast.error("Erreur lors de la transaction"); 
+    } 
     finally { setLoading(false); }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
+    window.location.reload();
   };
 
   const pieData = [
     { name: 'Valides', value: stats.total - stats.fraud },
     { name: 'Fraudes', value: stats.fraud },
   ];
-  const COLORS = ['#00C49F', '#FF4D4D'];
+  const COLORS = ['#10B981', '#EF4444'];
 
   return (
-    <div className="dashboard-container">
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="logo">
-          <ShieldCheck size={28} color="#646cff" />
-          <h2>FinShield</h2>
+    <div className="app-layout">
+      {/* AJOUT DU CONTENEUR DE NOTIFICATIONS */}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover theme="dark" />
+
+      <aside className="sidebar glass-effect">
+        <div className="logo-container">
+          <div className="logo-icon"><ShieldCheck size={24} color="white"/></div>
+          <h1>FinShield</h1>
         </div>
+        
         <nav>
-          {/* --- BOUTONS ACTIFS --- */}
-          <button 
-            className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} 
-            onClick={() => setActiveTab('dashboard')}
-          >
+          <p className="nav-label">MENU</p>
+          <button className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
             <LayoutDashboard size={20} /> Dashboard
           </button>
           
-          <button 
-            className={`nav-item ${activeTab === 'transactions' ? 'active' : ''}`} 
-            onClick={() => setActiveTab('transactions')}
-          >
-            <List size={20} /> Transactions
-          </button>
+          {userRole === 'ADMIN' && (
+            <button className={`nav-item ${activeTab === 'transactions' ? 'active' : ''}`} onClick={() => setActiveTab('transactions')}>
+              <List size={20} /> Historique Global
+            </button>
+          )}
         </nav>
+
+        <div className="sidebar-footer">
+          <button className="logout-btn" onClick={handleLogout}>
+            <LogOut size={18} /> Déconnexion
+          </button>
+        </div>
       </aside>
 
-      {/* Main Content */}
       <main className="main-content">
-        
-        {/* --- VUE DASHBOARD --- */}
+        <header className="top-bar">
+          <div>
+            <h2>{activeTab === 'dashboard' ? 'Espace de Travail' : 'Journal des Transactions'}</h2>
+            <p className="date-display">{new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          </div>
+          <div className="user-profile">
+            <div className={`avatar ${userRole === 'ADMIN' ? 'bg-primary' : 'bg-green'}`}>
+              {username.charAt(0).toUpperCase()}
+            </div>
+            <div style={{display: 'flex', flexDirection: 'column'}}>
+                <span style={{fontWeight: 'bold', fontSize: '0.9rem'}}>{username}</span>
+                <span style={{fontSize: '0.75rem', color: '#94a3b8'}}>{userRole === 'ADMIN' ? 'Administrateur' : 'Employé'}</span>
+            </div>
+          </div>
+        </header>
+
         {activeTab === 'dashboard' && (
-          <>
-            <header>
-              <h1>Vue d'ensemble</h1>
-              <p>Surveillance des transactions en temps réel</p>
-            </header>
+          <div className="dashboard-grid">
+            {/* ... Le reste du contenu du dashboard est identique ... */}
+            {userRole === 'ADMIN' ? (
+              <>
+                <div className="kpi-card glass-effect">
+                    <div className="kpi-icon blue"><Activity size={24} /></div>
+                    <div><p className="kpi-label">Total Transactions</p><h3 className="kpi-value">{stats.total}</h3></div>
+                </div>
+                <div className="kpi-card glass-effect">
+                    <div className="kpi-icon red"><ShieldAlert size={24} /></div>
+                    <div><p className="kpi-label">Menaces Bloquées</p><h3 className="kpi-value">{stats.fraud}</h3></div>
+                </div>
+                <div className="kpi-card glass-effect">
+                    <div className="kpi-icon green"><DollarSign size={24} /></div>
+                    <div><p className="kpi-label">Volume Sécurisé</p><h3 className="kpi-value">{stats.secureAmount.toLocaleString('fr-FR')} €</h3></div>
+                </div>
+              </>
+            ) : (
+                <div className="card glass-effect" style={{gridColumn: 'span 3', textAlign: 'center', padding: '2rem'}}>
+                    <h3>👋 Bonjour {username}</h3>
+                    <p style={{color: '#94a3b8'}}>Vous êtes connecté au système de détection. Utilisez le scanner ci-dessous pour vérifier une transaction.</p>
+                </div>
+            )}
 
-            <div className="kpi-grid">
-              <div className="card kpi">
-                <div className="icon-bg blue"><Activity size={24} /></div>
-                <div><h3>Total Transactions</h3><p className="value">{stats.total}</p></div>
-              </div>
-              <div className="card kpi">
-                <div className="icon-bg red"><ShieldAlert size={24} /></div>
-                <div><h3>Fraudes Détectées</h3><p className="value">{stats.fraud}</p></div>
-              </div>
-              <div className="card kpi">
-                <div className="icon-bg green"><DollarSign size={24} /></div>
-                <div><h3>Volume Sécurisé</h3><p className="value">{stats.secureAmount.toLocaleString()} €</p></div>
-              </div>
+            <div className="card glass-effect form-section" style={{gridColumn: userRole === 'USER' ? 'span 3' : 'span 1'}}>
+              <h3><Search size={20}/> Simulateur IA</h3>
+              <form onSubmit={handleSubmit} className="simulation-form">
+                <div className="form-group">
+                  <label>Montant (€)</label>
+                  <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Ex: 500.00" required />
+                </div>
+                <div className="form-group">
+                  <label>Distance (km)</label>
+                  <input type="number" value={distance} onChange={e => setDistance(e.target.value)} placeholder="Ex: 12" required />
+                </div>
+                <button type="submit" disabled={loading} className="analyze-btn">
+                  {loading ? 'Analyse en cours...' : 'Scanner la transaction'}
+                </button>
+              </form>
             </div>
 
-            <div className="content-grid">
-              <div className="left-column">
-                <div className="card form-card">
-                  <h3>⚡ Simulation Rapide</h3>
-                  <form onSubmit={handleSubmit}>
-                    <div className="form-row">
-                      <input type="number" placeholder="Montant (€)" value={amount} onChange={e => setAmount(e.target.value)} required />
-                      <input type="number" placeholder="Distance (km)" value={distance} onChange={e => setDistance(e.target.value)} required />
-                    </div>
-                    <button type="submit" disabled={loading}>{loading ? 'Analyse...' : 'Scanner la transaction'}</button>
-                  </form>
-                </div>
-
-                <div className="card chart-card">
-                  <h3>Répartition des Risques</h3>
-                  <div style={{ width: '100%', height: 200 }}>
+            {userRole === 'ADMIN' && (
+                <>
+                <div className="card glass-effect chart-section">
+                <h3>Répartition des Risques</h3>
+                <div style={{ width: '100%', height: 220 }}>
                     <ResponsiveContainer>
-                      <PieChart>
-                        <Pie data={pieData} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                          {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                    <PieChart>
+                        <Pie data={pieData} innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value" stroke="none">
+                        {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                         </Pie>
-                        <Tooltip />
-                      </PieChart>
+                        <Tooltip contentStyle={{backgroundColor: '#1e293b', borderRadius: '8px', border: 'none'}} itemStyle={{color: '#fff'}}/>
+                    </PieChart>
                     </ResponsiveContainer>
-                  </div>
-                  <div className="legend"><span>🟢 Valides</span><span>🔴 Fraudes</span></div>
                 </div>
-              </div>
+                </div>
 
-              <div className="card table-card">
-                <h3>Dernières Transactions</h3>
-                <div className="table-responsive">
-                  <table>
-                    <thead>
-                      <tr><th>ID</th><th>Montant</th><th>Distance</th><th>Score IA</th><th>Statut</th></tr>
-                    </thead>
+                <div className="card glass-effect table-section full-width">
+                <h3>Dernières Activités</h3>
+                <table className="modern-table">
+                    <thead><tr><th>ID</th><th>Montant</th><th>Distance</th><th>Score</th><th>Statut</th></tr></thead>
                     <tbody>
-                      {transactions.slice(0, 5).map((t) => (
+                    {transactions.slice(0, 5).map((t) => (
                         <tr key={t.id}>
-                          <td>#{t.id}</td>
-                          <td>{t.amount} €</td>
-                          <td>{t.distance} km</td>
-                          <td>{(t.fraudProbability * 100).toFixed(1)}%</td>
-                          <td><span className={`badge ${t.isFraud ? 'badge-fraud' : 'badge-valid'}`}>{t.isFraud ? 'REFUSÉ' : 'OK'}</span></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* --- VUE TRANSACTIONS (Pleine Page) --- */}
-        {activeTab === 'transactions' && (
-          <>
-            <header>
-              <h1>Historique Complet</h1>
-              <p>Liste détaillée de toutes les opérations</p>
-            </header>
-
-            <div className="card table-card" style={{ marginTop: '20px' }}>
-              <div className="table-responsive">
-                <table>
-                  <thead>
-                    <tr><th>ID</th><th>Date</th><th>Montant</th><th>Distance</th><th>Risque Calculé</th><th>Décision</th></tr>
-                  </thead>
-                  <tbody>
-                    {transactions.map((t) => (
-                      <tr key={t.id}>
                         <td>#{t.id}</td>
-                        {/* On ajoute une fausse date pour faire joli si pas dispo */}
-                        <td>{t.timestamp ? new Date(t.timestamp).toLocaleTimeString() : 'Maintenant'}</td>
-                        <td>{t.amount} €</td>
+                        <td className="font-mono">{t.amount} €</td>
                         <td>{t.distance} km</td>
-                        <td>{(t.fraudProbability * 100).toFixed(2)}%</td>
-                        <td>
-                          <span className={`badge ${t.isFraud ? 'badge-fraud' : 'badge-valid'}`}>
-                            {t.isFraud ? 'FRAUDE DÉTECTÉE' : 'APPROUVÉE'}
-                          </span>
-                        </td>
-                      </tr>
+                        <td>{(t.fraudProbability * 100).toFixed(1)}%</td>
+                        <td><span className={`status-badge ${t.isFraud ? 'status-fraud' : 'status-valid'}`}>{t.isFraud ? 'BLOQUÉ' : 'VALIDÉ'}</span></td>
+                        </tr>
                     ))}
-                  </tbody>
+                    </tbody>
                 </table>
-              </div>
-            </div>
-          </>
+                </div>
+                </>
+            )}
+          </div>
         )}
 
+        {activeTab === 'transactions' && userRole === 'ADMIN' && (
+          <div className="card glass-effect table-section">
+            <table className="modern-table">
+              <thead><tr><th>ID</th><th>Date</th><th>Montant</th><th>Distance</th><th>Risque</th><th>Statut</th></tr></thead>
+              <tbody>
+                {transactions.map((t) => (
+                  <tr key={t.id}>
+                    <td>#{t.id}</td>
+                    <td>{new Date().toLocaleTimeString()}</td>
+                    <td className="font-mono">{t.amount} €</td>
+                    <td>{t.distance} km</td>
+                    <td className={t.isFraud ? 'text-danger' : 'text-success'}>{(t.fraudProbability * 100).toFixed(2)}%</td>
+                    <td><span className={`status-badge ${t.isFraud ? 'status-fraud' : 'status-valid'}`}>{t.isFraud ? 'FRAUDE' : 'OK'}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        
+        {activeTab === 'transactions' && userRole !== 'ADMIN' && (
+            <div className="card glass-effect" style={{textAlign: 'center', padding: '4rem', color: '#ef4444'}}>
+                <Lock size={48} style={{marginBottom: '1rem'}}/>
+                <h2>Accès Interdit</h2>
+                <p>Seuls les administrateurs peuvent voir l'historique global.</p>
+            </div>
+        )}
       </main>
     </div>
   );
