@@ -1,64 +1,116 @@
-# 🛡️ FinShield AI - Système de Détection de Fraude Distribué
+# 🛡️ FinShield AI - Intelligent Fraud Detection System
 
-FinShield est une plateforme bancaire démonstratrice utilisant une architecture **Microservices**. Elle combine la robustesse de **Java Spring Boot** pour les transactions financières et la puissance de **Python (Scikit-Learn)** pour l'analyse prédictive de fraude en temps réel.
+![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=java)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3-green?style=for-the-badge&logo=spring)
+![Python](https://img.shields.io/badge/Python-3.9-blue?style=for-the-badge&logo=python)
+![React](https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker)
 
-## 🚀 Architecture Technique
+**FinShield AI** is a full-stack microservices application designed to detect credit card fraud in real-time. It combines a robust **Java Spring Boot** backend, a **React** dashboard, and a **Python AI** engine trained on real-world banking data.
 
-Le projet est divisé en deux microservices autonomes communiquant via API REST :
+---
 
-1.  **Core Banking Service (Java 21 + Spring Boot 3)**
-    * Gère les transactions, les utilisateurs et la persistance des données.
-    * Communique de manière synchrone avec le service d'IA pour valider chaque transaction.
-    * Base de données : H2 (In-Memory) pour le développement, extensible vers MySQL/PostgreSQL.
+## 🚀 Architecture
 
-2.  **Fraud Detection Service (Python + FastAPI)**
-    * Expose un modèle de Machine Learning (Random Forest) via une API haute performance.
-    * Analyse les patterns de transactions (Montant, Distance, Heure) pour calculer un score de risque.
-    * Précision du modèle actuel : > 99%.
+The project follows a decoupled **Microservices Architecture**:
 
-## 🛠️ Stack Technologique
+1.  **Frontend (React + Vite):** A modern dashboard for bank administrators to simulate transactions and view analytics.
+2.  **Core Banking Service (Java Spring Boot):** Handles transaction processing, data persistence (H2 Database), and communicates with the AI service.
+3.  **Fraud Detection Service (Python FastAPI):** A dedicated AI service running a **Random Forest** model (Scikit-Learn) trained on the Kaggle *Credit Card Fraud Detection* dataset.
 
-* **Backend :** Java 21, Spring Boot 3 (Web, Data JPA), Lombok.
-* **AI/ML :** Python 3.x, FastAPI, Scikit-learn, Pandas, Joblib.
-* **Outils :** Maven, Git, REST Template.
+### 🔄 Workflow
+1. User submits a transaction via the **React Dashboard**.
+2. **Java Backend** receives the request and forwards data to **Python AI**.
+3. **Python AI** predicts the fraud probability (0% to 100%) and returns the verdict.
+4. **Java Backend** saves the transaction with the status (`APPROVED` or `REJECTED_FRAUD`).
+5. **Frontend** updates the UI in real-time.
 
-## 📦 Installation et Lancement
+---
 
-### Prérequis
-* Java 17 ou 21 installé.
-* Python 3.9+ installé.
+## 📸 Screenshots
 
-### 1. Lancer le Service IA (Python)
+| Dashboard View |
+|:---:|:---:|
+| ![alt text](image.png) |
+
+---
+
+## 🛠️ Tech Stack
+
+* **Frontend:** React, Vite, Recharts (Data Viz), Lucide-React (Icons), CSS Grid.
+* **Backend:** Java 21, Spring Boot 3 (Web, Data JPA), REST Template, H2 Database.
+* **AI/ML:** Python 3.9, FastAPI, Scikit-Learn, Pandas, Joblib.
+* **DevOps:** Docker, Docker Compose, Nginx.
+
+---
+
+## 📦 Installation & Setup
+
+### Prerequisites
+* [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+
+### 1. Clone the Repository
 ```bash
+git clone [https://github.com/YOUR_USERNAME/FinShield-AI.git](https://github.com/whosredais/FinShield-AI.git)
+cd FinShield-AI
+
+### 2. Run with Docker (The Magic Command) 🐳
+
+Build and start all services (Frontend, Java, Python) with a single command:
+
+```bash
+docker-compose up --build
+
+Wait until you see the logs:
+
+"Started CoreBankingApplication" (Java API)
+
+"Uvicorn running" (Python API)
+
+🖥️ Access the Application
+Once Docker is running, access the services via your browser:
+
+Service	               URL	                         Description
+Frontend Dashboard	   http://localhost:5173         START HERE - The main user interface
+Java API	           http://localhost:8081	     Core Banking API (Swagger/Endpoints)
+Python API	           http://localhost:8000	     Fraud Detection Engine (FastAPI Docs)
+
+🧠 The AI Model (Dataset)
+The model included (real_fraud_model.pkl) is pre-trained using the Random Forest algorithm on the Kaggle Credit Card Fraud Detection Dataset.
+
+Want to re-train the model?
+Due to GitHub file size limits, the raw CSV dataset is not included in this repo.
+
+Download creditcard.csv from Kaggle
+
+Place it in the fraud-detection-service/ folder
+
+Run the training script (requires Python installed locally):
+
 cd fraud-detection-service
-pip install pandas scikit-learn joblib fastapi uvicorn
-# Entraîner le modèle (si nécessaire)
-python train_model.py
-# Lancer l'API
-uvicorn main:app --reload
+pip install pandas scikit-learn joblib
+python train_kaggle.py
 
-### 2. Lancer le Core Banking (Java)
-Bash
 
-cd core-banking-service/core-banking
-./mvnw spring-boot:run
-L'API Java sera accessible sur http://localhost:8081.
+🧪 Testing Scenarios
+Use the Dashboard simulation form to test the AI:
 
-🧪 Exemple d'Utilisation (API)
-POST /api/transactions
+✅ Scenario 1: Normal Transaction
+Amount: 50 €
 
-JSON
+Distance: 5 km
 
-{
-  "amount": 950,
-  "distance": 80
-}
-Réponse (Fraude détectée) :
+Result: APPROVED 🟢
 
-JSON
+❌ Scenario 2: Suspicious Transaction
+Amount: 10,000 € (High value)
 
-{
-    "status": "REJECTED_FRAUD",
-    "fraud": true,
-    "fraudProbability": 0.99
-}
+Distance: 100 km (Unusual location)
+
+Result: REJECTED 🔴 (Depending on model probability)
+
+👨‍💻 Author
+
+Full Stack Developer & AI Enthusiast
+
+LinkedIn Profile : https://www.linkedin.com/in/mohamed-reda-boujir-a62087294/
