@@ -30,7 +30,7 @@ The project follows a decoupled **Microservices Architecture**:
 ## 📸 Screenshots
 
 | Dashboard View |
-|:---:|:---:|
+
 | ![alt text](image.png) |
 
 ---
@@ -53,29 +53,31 @@ The project follows a decoupled **Microservices Architecture**:
 ```bash
 git clone [https://github.com/YOUR_USERNAME/FinShield-AI.git](https://github.com/whosredais/FinShield-AI.git)
 cd FinShield-AI
-
+```
 ### 2. Run with Docker (The Magic Command) 🐳
 
 Build and start all services (Frontend, Java, Python) with a single command:
 
 ```bash
 docker-compose up --build
-
+```
 Wait until you see the logs:
 
 "Started CoreBankingApplication" (Java API)
 
 "Uvicorn running" (Python API)
 
-🖥️ Access the Application
+## 🖥️ Access the Application
+
 Once Docker is running, access the services via your browser:
 
-Service	               URL	                         Description
 Frontend Dashboard	   http://localhost:5173         START HERE - The main user interface
-Java API	           http://localhost:8081	     Core Banking API (Swagger/Endpoints)
-Python API	           http://localhost:8000	     Fraud Detection Engine (FastAPI Docs)
+Java API	             http://localhost:8081	       Core Banking API (Swagger/Endpoints)
+Python API	           http://localhost:8000	       Fraud Detection Engine (FastAPI Docs)
 
-🧠 The AI Model (Dataset)
+---
+## 🧠 The AI Model (Dataset)
+
 The model included (real_fraud_model.pkl) is pre-trained using the Random Forest algorithm on the Kaggle Credit Card Fraud Detection Dataset.
 
 Want to re-train the model?
@@ -86,13 +88,15 @@ Download creditcard.csv from Kaggle
 Place it in the fraud-detection-service/ folder
 
 Run the training script (requires Python installed locally):
-
+```bash
 cd fraud-detection-service
 pip install pandas scikit-learn joblib
 python train_kaggle.py
+```
+---
 
+## 🧪 Testing Scenarios
 
-🧪 Testing Scenarios
 Use the Dashboard simulation form to test the AI:
 
 ✅ Scenario 1: Normal Transaction
@@ -109,8 +113,11 @@ Distance: 100 km (Unusual location)
 
 Result: REJECTED 🔴 (Depending on model probability)
 
-👨‍💻 Author
+---
+## 👨‍💻 Author
 
 Full Stack Developer & AI Enthusiast
 
 LinkedIn Profile : https://www.linkedin.com/in/mohamed-reda-boujir-a62087294/
+
+---
