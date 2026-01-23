@@ -130,6 +130,7 @@ Register with any other username (e.g., RedaUser).
 Password: Any password.
 
 Result: You will only see the Simulation Form. The history tab will be locked 🔒.
+
 ---
 ## 👨‍💻 Author
 
